@@ -68,14 +68,15 @@ public class C {
 
 	//constants for TrainUpdater
 	public static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
-	public static final String DB_URL = "jdbc:mysql://amaas-dev:3306/";
+	public static final String DB_URL = "jdbc:mysql://localhost:3306/";
 	public static final String USER = "root";
-	public static final String PASS = "futro";
+	public static final String PASS = "";
 	public static final String QUERY = "SELECT subject, predicate, object, graph FROM traintimes.times WHERE batchid=%s;";
 	public static final URI GRAPH = new URIImpl("http://purl.org/ub/demo/graph/dynamic");
 	public static final URI SERURI = new URIImpl("http://purl.org/ub/demo/resource/TrainLocator");
 	public static final URI PROGRESSURI = new URIImpl("http://purl.org/ub/demo/ontology/progress");
 	public static final URI MAXURI = new URIImpl("http://purl.org/ub/demo/ontology/maxProgress");
 	public static final URI INTDTYPE = new URIImpl("http://www.w3.org/2001/XMLSchema#integer");
-	public static final String[] TRAINIDS = {"1X34", "2N99", "2U40", "2R03", "1M53", "2U64", "2N71", "1M87", "1V10", "2N62", "2N74", "1M89", "2R12"};
+	public static final int REFRESHTIME = 10;
+	public static final String[] TRAINIDS = {"1X34", "2N99", "2U40", "2R03"};// "1M53", "2U64"// "2N71", "1M87", "1V10", "2N62", "2N74", "1M89", "2R12"};
 }

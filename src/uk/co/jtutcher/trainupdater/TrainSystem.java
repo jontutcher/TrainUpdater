@@ -66,7 +66,7 @@ public class TrainSystem {
 					t.tc = circuits.get(0);
 				}
 			}
-			log += t.toString() + ' ';
+			log += '[' + t.code + ' ' + t.tc.name + ' ' + t.tc.getMid() + ']';
 			
 		}
 		System.out.println("Moving trains: " + log);

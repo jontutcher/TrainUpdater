@@ -43,7 +43,7 @@ public class TrainUpdateService extends AbstractScheduledService {
 
 	@Override
 	protected Scheduler scheduler() {
-		return Scheduler.newFixedRateSchedule(0, 5, TimeUnit.SECONDS);
+		return Scheduler.newFixedRateSchedule(0, C.REFRESHTIME, TimeUnit.SECONDS);
 	}
 
 
