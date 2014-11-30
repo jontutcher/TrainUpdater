@@ -6,6 +6,14 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 
 public class C {
+	
+	
+	
+	public C()
+	{
+		
+	}
+	
 	public static class NS {
 		public static final String U = "http://purl.org/ub/upper/";
 		public static final String DOC = "http://purl.org/ub/doc/";
@@ -60,23 +68,23 @@ public class C {
 		public final static Resource MILES = ValueFactoryImpl.getInstance().createURI("http://purl.org/ub/demo/graph/miles");
 		public final static Resource DYNAMIC = ABOX;
 	}
-	public static final int TRAINS=20;
-	public static final int MINTC=1;
-	public static final int MAXTC=83;
-	public static final String STARDOG = "http://localhost:5820/";
-	public static final String STARDOGDB = "trains";
+//	public static final int TRAINS=20;
+//	public static final int MINTC=1;
+//	public static final int MAXTC=83;
+//	public static final String STARDOG = "http://localhost:5820/";
+//	public static final String STARDOGDB = "trains";
 
 	//constants for TrainUpdater
-	public static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
-	public static final String DB_URL = "jdbc:mysql://localhost:3306/";
-	public static final String USER = "root";
-	public static final String PASS = "";
+//	public static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
+//	public static final String DB_URL = "jdbc:mysql://localhost:3306/";
+//	public static final String USER = "root";
+//	public static final String PASS = "";
 	public static final String QUERY = "SELECT subject, predicate, object, graph FROM traintimes.times WHERE batchid=%s;";
 	public static final URI GRAPH = new URIImpl("http://purl.org/ub/demo/graph/dynamic");
 	public static final URI SERURI = new URIImpl("http://purl.org/ub/demo/resource/TrainLocator");
 	public static final URI PROGRESSURI = new URIImpl("http://purl.org/ub/demo/ontology/progress");
 	public static final URI MAXURI = new URIImpl("http://purl.org/ub/demo/ontology/maxProgress");
 	public static final URI INTDTYPE = new URIImpl("http://www.w3.org/2001/XMLSchema#integer");
-	public static final int REFRESHTIME = 10;
+//	public static final int REFRESHTIME = 10;
 	public static final String[] TRAINIDS = {"1X34", "2N99", "2U40", "2R03"};// "1M53", "2U64"// "2N71", "1M87", "1V10", "2N62", "2N74", "1M89", "2R12"};
 }

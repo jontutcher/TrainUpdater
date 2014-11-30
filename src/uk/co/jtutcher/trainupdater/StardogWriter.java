@@ -3,6 +3,7 @@ package uk.co.jtutcher.trainupdater;
 import java.net.URI;
 import java.util.ArrayList;
 
+import org.apache.commons.configuration.Configuration;
 import org.openrdf.model.Graph;
 import org.openrdf.model.Resource;
 import org.openrdf.model.impl.URIImpl;
@@ -19,12 +20,13 @@ import com.complexible.stardog.api.admin.AdminConnection;
 import com.complexible.stardog.api.admin.AdminConnectionConfiguration;
 
 public class StardogWriter {
+	private Configuration config;
 	private AdminConnection a;
 	private Connection c;
 	private boolean connected = false;
 	ValueFactoryImpl vf = ValueFactoryImpl.getInstance();
-	public StardogWriter() {
-		
+	public StardogWriter(Configuration config) {
+		this.config = config;
 	}
 	
 	
@@ -39,9 +41,9 @@ public class StardogWriter {
 //                .connect();
 		
 		c = ConnectionConfiguration
-				.to(C.STARDOGDB)
-				.server(C.STARDOG)
-				.credentials("admin", "admin")
+				.to(config.getString("stardog.db"))
+				.server(config.getString("stardog.url"))
+				.credentials(config.getString("stardog.user"), config.getString("stardog.pass"))
 				.connect();
 		
 		connected = true;

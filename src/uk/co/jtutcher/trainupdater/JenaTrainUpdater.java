@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Random;
 
+import org.apache.commons.configuration.Configuration;
 import org.openrdf.model.Graph;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
@@ -24,6 +25,7 @@ import com.complexible.stardog.StardogException;
 
 public class JenaTrainUpdater {
 	
+	private Configuration config;
 	private boolean connected = false;
 	private Connection sqlConn = null;
 	private StardogWriter s;
@@ -42,8 +44,9 @@ public class JenaTrainUpdater {
 	}
 	
 	
-	public JenaTrainUpdater(StardogWriter sw) throws NoConnectionException
+	public JenaTrainUpdater(StardogWriter sw, Configuration config) throws NoConnectionException
 	{ 
+		this.config = config;
 		if(!sw.isConnected()) throw new NoConnectionException("Stardog not connected!");
 		s = sw;
 		try {
@@ -78,9 +81,9 @@ public class JenaTrainUpdater {
 	}
 	public boolean connect() throws ClassNotFoundException, SQLException
 	{
-		Class.forName(C.JDBC_DRIVER);
+		Class.forName(config.getString("mysql.driver"));
 		try {
-			sqlConn = DriverManager.getConnection(C.DB_URL,C.USER,C.PASS);
+			sqlConn = DriverManager.getConnection(config.getString("mysql.url"),config.getString("mysql.user"),config.getString("mysql.pass"));
 			s.open();
 			connected = true;
 			return true;
