@@ -14,7 +14,7 @@ public class TrainUpdaterMain {
 		// TODO Auto-generated method stub
 		Configuration config;
 		try {
-			config = new PropertiesConfiguration("config.properties");
+			config = new PropertiesConfiguration("trainupdater.properties");
 			if(!AppConfig.validate(config)) throw new Exception("Invalid Configuration File");	//if the config file doesn't validate then quit
 		} catch (Exception e1) {
 			System.out.println("Exception, program quitting: " + e1.getMessage());
