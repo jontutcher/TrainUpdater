@@ -3,15 +3,26 @@ package uk.co.jtutcher.trainupdater;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import uk.co.jtutcher.trainupdater.Train.Dir;
 
 public class TrainSystem {
+	
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private ArrayList<Train> trains;
 	ArrayList<TrackCircuit> circuits;
-	private Track track;
+//	private Track track;
+	private String rName;
 	
+	public String getName() {
+		return rName;
+	}
+
 	public void addTrain(Train t)
 	{
+		logger.trace("Adding train {} to railway {}", t, rName);
 		trains.add(t);
 	}
 	
@@ -20,8 +31,9 @@ public class TrainSystem {
 		trains.remove(t);
 	}
 	
-	public TrainSystem(ArrayList<TrackCircuit> circuits)
+	public TrainSystem(ArrayList<TrackCircuit> circuits, String name)
 	{
+		this.rName = name;
 		this.trains = new ArrayList<Train>();
 		this.circuits = circuits;
 	}
@@ -33,8 +45,9 @@ public class TrainSystem {
 	
 	public void moveTrains()
 	{
-		Iterator<Train> itr = trains.iterator();
+		logger.trace("Moving trains on railway {}", rName);
 		String log = "";
+		Iterator<Train> itr = trains.iterator();
 		while(itr.hasNext())
 		{
 			Train t = itr.next();
@@ -66,11 +79,10 @@ public class TrainSystem {
 					t.tc = circuits.get(0);
 				}
 			}
-			log += '[' + t.code + ' ' + t.tc.name + ' ' + t.tc.getMid() + ']';
+			log += '[' + t.code + ' ' + t.tc.getMid() + ']';
 			
 		}
-		System.out.println("Moving trains: " + log);
-		
+		logger.info("Moving trains on railway {}: {} ", rName, log);
 	}
 }
 

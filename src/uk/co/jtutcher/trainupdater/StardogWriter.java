@@ -1,27 +1,29 @@
 package uk.co.jtutcher.trainupdater;
 
-import java.net.URI;
 import java.util.ArrayList;
 
 import org.apache.commons.configuration.Configuration;
 import org.openrdf.model.Graph;
-import org.openrdf.model.Resource;
-import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.TupleQueryResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import uk.co.jtutcher.trainupdater.exceptions.FailedToCloseException;
+import uk.co.jtutcher.trainupdater.exceptions.NoConnectionException;
 
 import com.complexible.stardog.StardogException;
 import com.complexible.stardog.api.Connection;
 import com.complexible.stardog.api.ConnectionConfiguration;
 import com.complexible.stardog.api.SelectQuery;
-import com.complexible.stardog.api.admin.AdminConnection;
-import com.complexible.stardog.api.admin.AdminConnectionConfiguration;
 
 public class StardogWriter {
+	
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private Configuration config;
-	private AdminConnection a;
+//	private AdminConnection a;
 	private Connection c;
 	private boolean connected = false;
 	ValueFactoryImpl vf = ValueFactoryImpl.getInstance();
@@ -34,35 +36,28 @@ public class StardogWriter {
 		return connected;
 	}
 	
-	public void open() throws StardogException
+	public void open() throws NoConnectionException
 	{
 //		a = AdminConnectionConfiguration.toServer(C.STARDOG)
 //                .credentials("admin", "admin")
 //                .connect();
 		
-		c = ConnectionConfiguration
-				.to(config.getString("stardog.db"))
-				.server(config.getString("stardog.url"))
-				.credentials(config.getString("stardog.user"), config.getString("stardog.pass"))
-				.connect();
+		try {
+			c = ConnectionConfiguration
+					.to(config.getString("stardog.db"))
+					.server(config.getString("stardog.url"))
+					.credentials(config.getString("stardog.user"), config.getString("stardog.pass"))
+					.connect();
+		} catch (StardogException e) {
+			// TODO Auto-generated catch block
+			logger.error("Cannot connect to Stardog", e);
+			throw new NoConnectionException("Cannot connect to Stardog");
+		}
+		
+		
 		
 		connected = true;
 	}
-	
-//	public void addPizza() throws NoConnectionException, StardogException
-//	{
-//		if(!connected) throw new NoConnectionException("Not Connected!");
-//		c.begin();
-//		try {
-//			c.add().io()
-//				.format(RDFFormat.RDFXML)
-//				.stream(new FileInputStream("res/pizza.rdf"));
-//		} catch (FileNotFoundException e) {
-//			throw new NoConnectionException();
-//		}
-//		c.commit();
-//		
-//	}
 	
 	public ArrayList<TrackCircuit> getCircuits() throws StardogException, NumberFormatException, QueryEvaluationException
 	{
@@ -70,7 +65,6 @@ public class StardogWriter {
 		SelectQuery s = c.select("SELECT ?tc (COALESCE(?label, ?tc) as ?name) ?min ?max WHERE {?tc a is:TrackCircuit ; is:minLocation [is:mileage ?min] ; is:maxLocation [is:mileage ?max] ; u:id ?id . OPTIONAL {?tc rdfs:label ?label}} ORDER BY ASC(?id)");
 		s.limit(100);
 		TupleQueryResult res = s.execute();
-		
 		while(res.hasNext())
 		{
 			BindingSet b = res.next();
@@ -85,9 +79,20 @@ public class StardogWriter {
 	}
 
 	
-	public void close() throws StardogException
+	public void close() throws FailedToCloseException
 	{
+		
+		if(!connected) return;
+		
+		try {
+		logger.info("Closing stardog writer");
 		c.close();
+		logger.info("Stardog writer closed");
+		} catch (StardogException e) {
+			logger.error("Stardog failed to close", e);
+			throw new FailedToCloseException("Could not close triplestore");
+		}
+		return;
 	}
 
 	/**
@@ -96,10 +101,10 @@ public class StardogWriter {
 	 * @param clear Whether to remove entire graph before write (true to do so)
 	 * @throws NoConnectionException
 	 */
-	
 	public void writeGraph(Graph gStage, boolean clear) throws NoConnectionException {
 		if(!connected) throw new NoConnectionException("Not Connected!");
 		try {
+			
 			c.begin();
 			if(clear)
 			{
@@ -109,12 +114,11 @@ public class StardogWriter {
 			}
 			//hope for a context aware graph!
 			c.add().graph(gStage);
-			System.out.println("Writing Graph: " + gStage);
+			logger.info("Writing graph {}", TUHelper.miniTruncate(gStage.toString()));
 			c.commit();
-			System.out.println("Committed Graph\n");
+			logger.info("Committed graph");
 		} catch (StardogException e) {
-			System.out.println("Error Writing");
-			e.printStackTrace();
+			logger.error("Could not write to Stardog", e);
 //			throw new NoConnectionException();
 		}
 	}

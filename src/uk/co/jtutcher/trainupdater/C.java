@@ -8,7 +8,6 @@ import org.openrdf.model.impl.ValueFactoryImpl;
 public class C {
 	
 	
-	
 	public C()
 	{
 		
@@ -85,6 +84,7 @@ public class C {
 	public static final URI PROGRESSURI = new URIImpl("http://purl.org/ub/demo/ontology/progress");
 	public static final URI MAXURI = new URIImpl("http://purl.org/ub/demo/ontology/maxProgress");
 	public static final URI INTDTYPE = new URIImpl("http://www.w3.org/2001/XMLSchema#integer");
+	public static final int TRUNC = 100;
 //	public static final int REFRESHTIME = 10;
 	public static final String[] TRAINIDS = {"1X34", "2N99", "2U40", "2R03"};// "1M53", "2U64"// "2N71", "1M87", "1V10", "2N62", "2N74", "1M89", "2R12"};
 }

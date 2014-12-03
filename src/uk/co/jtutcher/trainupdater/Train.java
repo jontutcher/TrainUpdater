@@ -1,12 +1,13 @@
 package uk.co.jtutcher.trainupdater;
 
-import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
-import org.openrdf.model.impl.ContextStatementImpl;
-import org.openrdf.model.impl.StatementImpl;
 import org.openrdf.model.impl.URIImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Train {
+	
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	public enum Dir {UP, DOWN}; 
 	public String name;
 	public TrackCircuit tc;
@@ -15,6 +16,7 @@ public class Train {
 	
 	public Train(String name, TrackCircuit tc)
 	{
+		logger.trace("New train: {}", name);
 		this.name = name;
 		this.tc = tc;
 	}

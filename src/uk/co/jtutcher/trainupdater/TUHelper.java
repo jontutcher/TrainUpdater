@@ -2,31 +2,26 @@ package uk.co.jtutcher.trainupdater;
 
 import java.sql.Time;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.UUID;
 
-import javax.xml.datatype.DatatypeFactory;
-
-import org.openrdf.model.Graph;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
-import org.openrdf.model.ValueFactory;
-import org.openrdf.model.datatypes.XMLDatatypeUtil;
 import org.openrdf.model.impl.ContextStatementImpl;
-import org.openrdf.model.impl.LiteralImpl;
-import org.openrdf.model.impl.StatementImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 
-import uk.co.jtutcher.trainupdater.Train.Dir;
-
-import com.complexible.common.openrdf.model.Graphs;
-
 public class TUHelper {
+	
+	public static String miniTruncate(String truncString)
+	{
+		return truncString.toString().substring(0, C.TRUNC-3) + "...";
+		
+	}
+	
 	public static boolean IsValidIRI(String iri)
 	{
 		try {
+			@SuppressWarnings(value = { "unused" })
 			URI node = new URIImpl(iri);
 			return true;
 		}
@@ -35,6 +30,17 @@ public class TUHelper {
 		}
 	}
 	
+	/**
+	 * Create all the RDF nodes for a particular train 'stop' (i.e. a location it is in at a time)
+	 * @param subj
+	 * @param label
+	 * @param time
+	 * @param tc
+	 * @param dir
+	 * @param from
+	 * @param to
+	 * @return
+	 */
 	public static ArrayList<Statement> createStopNodes(URI subj, String label, Time time, TrackCircuit tc, URI dir, URI from, URI to)
 	{
 		ValueFactoryImpl vf = ValueFactoryImpl.getInstance();

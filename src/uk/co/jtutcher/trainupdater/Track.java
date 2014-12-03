@@ -1,6 +1,5 @@
 package uk.co.jtutcher.trainupdater;
 
-import java.util.ArrayList;
 
 public class Track {
 	private int min;

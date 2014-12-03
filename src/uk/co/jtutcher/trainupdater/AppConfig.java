@@ -1,37 +1,43 @@
 package uk.co.jtutcher.trainupdater;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * AppConfig verifies the Train Updater application's configuration file through its static 'validate' method
+ * @author Jon
+ *
+ */
 public class AppConfig {
-	public AppConfig(String fName)
-	{
-		try {
-			Configuration config = new PropertiesConfiguration(fName);
-			System.out.println("Config: " + config.getInt("stardog.url"));
-		} catch (ConfigurationException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-	}
+	private static final Logger logger = LoggerFactory.getLogger(AppConfig.class);
 
+	/**
+	 * Validates a TrainUpdater config file by checking that it has all necessary properties
+	 * @param c
+	 * @return
+	 */
 	public static boolean validate(Configuration c) {
-		if(!c.containsKey("app.trains")) return false;
-		if(!c.containsKey("app.mintc")) return false;
-		if(!c.containsKey("app.maxtc")) return false;
-		if(!c.containsKey("app.refresh")) return false;
+		logger.trace("Validating Config file");
+		boolean vres = true;
+		
+		if(!c.containsKey("app.trains")) vres = false;
+		if(!c.containsKey("app.mintc")) vres = false;
+		if(!c.containsKey("app.maxtc")) vres = false;
+		if(!c.containsKey("app.refresh")) vres = false;
 
-		if(!c.containsKey("stardog.url")) return false;
-		if(!c.containsKey("stardog.db")) return false;
-		if(!c.containsKey("stardog.user")) return false;
-		if(!c.containsKey("stardog.pass")) return false;
+		if(!c.containsKey("stardog.url")) vres = false;
+		if(!c.containsKey("stardog.db")) vres = false;
+		if(!c.containsKey("stardog.user")) vres = false;
+		if(!c.containsKey("stardog.pass")) vres = false;
 
-		if(!c.containsKey("mysql.driver")) return false;
-		if(!c.containsKey("mysql.url")) return false;
-		if(!c.containsKey("mysql.user")) return false;
-		if(!c.containsKey("mysql.pass")) return false;
+		if(!c.containsKey("mysql.driver")) vres = false;
+		if(!c.containsKey("mysql.url")) vres = false;
+		if(!c.containsKey("mysql.user")) vres = false;
+		if(!c.containsKey("mysql.pass")) vres = false;
+		if(!c.containsKey("railway.name")) vres = false;
 
-		return true;
+		if(!vres)logger.info("Configuration file found to be invalid");
+		return vres;
 	}
 }

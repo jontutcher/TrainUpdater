@@ -1,23 +1,19 @@
 package uk.co.jtutcher.trainupdater;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Random;
 
 import org.apache.commons.configuration.Configuration;
 import org.openrdf.model.Graph;
-import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.*;
+import org.openrdf.model.impl.ContextStatementImpl;
+import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.query.QueryEvaluationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import uk.co.jtutcher.trainupdater.Train.Dir;
+import uk.co.jtutcher.trainupdater.exceptions.BadDBException;
+import uk.co.jtutcher.trainupdater.exceptions.NoConnectionException;
 
 import com.complexible.common.openrdf.model.Graphs;
 import com.complexible.stardog.StardogException;
@@ -25,10 +21,12 @@ import com.complexible.stardog.StardogException;
 
 public class JenaTrainUpdater {
 	
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	@SuppressWarnings("unused")
 	private Configuration config;
+	@SuppressWarnings("unused")
 	private boolean connected = false;
-	private Connection sqlConn = null;
-	private StardogWriter s;
+	private StardogWriter stardogWriter;
 	public Train[] trains;
 	public ArrayList<TrackCircuit> tcs;
 	TrainSystem line;
@@ -44,21 +42,25 @@ public class JenaTrainUpdater {
 	}
 	
 	
-	public JenaTrainUpdater(StardogWriter sw, Configuration config) throws NoConnectionException
+	/**
+	 * Creates moving train system and calls update mechanisms for passing out RDF
+	 * @param sw
+	 * @param config
+	 * @throws NoConnectionException
+	 * @throws StardogException 
+	 * @throws QueryEvaluationException 
+	 * @throws NumberFormatException 
+	 */
+	public JenaTrainUpdater(StardogWriter stardogWriter, Configuration config) throws NoConnectionException, NumberFormatException, QueryEvaluationException, StardogException
 	{ 
 		this.config = config;
-		if(!sw.isConnected()) throw new NoConnectionException("Stardog not connected!");
-		s = sw;
-		try {
-			tcs = s.getCircuits();
-			//TODO
-		} catch (NumberFormatException | QueryEvaluationException
-				| StardogException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		if(!stardogWriter.isConnected()) throw new NoConnectionException("Stardog not connected!");
+		this.stardogWriter = stardogWriter;
+		tcs = stardogWriter.getCircuits();	//may throw exceptions if we can't get track circuits
+		
 		trains = new Train[C.TRAINIDS.length];
-		line = new TrainSystem(tcs);
+		line = new TrainSystem(tcs, config.getString("railway.name"));
+		logger.info("Initiated railway line {} with {} trains", line.getName(), trains.length);
 		Random rand = new Random();
 		int tLoc = 0;
 		boolean b = rand.nextBoolean();
@@ -79,92 +81,56 @@ public class JenaTrainUpdater {
 		
 		
 	}
-	public boolean connect() throws ClassNotFoundException, SQLException
-	{
-		Class.forName(config.getString("mysql.driver"));
-		try {
-			sqlConn = DriverManager.getConnection(config.getString("mysql.url"),config.getString("mysql.user"),config.getString("mysql.pass"));
-			s.open();
-			connected = true;
-			return true;
-		} catch (SQLException | StardogException e) {
-			e.printStackTrace();
-			return false;
-		} finally {
-			//reset back to default
-		}
-	}
 	
 	/**
-	 * Update the triplestore as necessary! returns true if update happened, or false if there were no results.
-	 * @param index
-	 * @throws Exception 
+	 * 
+	 * @return Graph
+	 * @throws NoConnectionException
 	 */
-	
 	public Graph doAuto() throws NoConnectionException
 	{
-		if(!connected) throw new NoConnectionException();
+		if(!stardogWriter.isConnected()) throw new NoConnectionException("Stardog not connected!");
 		line.moveTrains();
-		
+		logger.trace("Moving Trains");
 		Graph gStage = Graphs.newContextGraph();
 		Iterator<Train> itr = line.getTrains().iterator();
+		
 		while(itr.hasNext())
 		{
 			Train t = itr.next();
+			//generate all RDF nodes concerning a particular train and its current location
 			gStage.addAll(TUHelper.createStopNodes(t.getFQName(), t.getLabel(), null, t.tc, t.getDir(), t.getFrom(), t.getTo()));
 		}
+	
 		return gStage;
 	}
 	
-//	public Graph doSQLUpdate(int index) throws NoConnectionException, SQLException, StardogException
-//	{
-//		//get us out of here if we're not connected
-//		if(!connected) throw new NoConnectionException();
-//		//cast index to Integer just for convenience
-//		Integer qIndex = Integer.valueOf(index);
-//		// create a SQL statement object to execute
-//		Statement stmt;
-//		stmt = sqlConn.createStatement();
-//		// send our query, using the constant defined above, with the index as the 'BatchID' variable.
-//		ResultSet rs = stmt.executeQuery(String.format(C.QUERY, qIndex.toString()));
-//
-//		//check if we have any results; if not, return false as we have nothing to do
-//		if (!rs.isBeforeFirst() ) {    
-//			 System.out.println("No data");
-//			 throw new SQLException();
-//		} 
-//		//list of statements to add
-//		Graph gStage = Graphs.newGraph();
-//		while(rs.next())
-//		{
-//			try {
-//				org.openrdf.model.Statement triple = textStatement(rs.getString("subject"), rs.getString("predicate"), rs.getString("object"), rs.getString("graph"));
-//				gStage.add(triple);
-//			} catch (IllegalArgumentException e) {
-//				System.out.println(e.getMessage());
-//			}
-//		}
-//		return gStage;
-//	}
-	
-	public boolean doUpdate(int index) throws NoConnectionException, SQLException, StardogException
+	public boolean doUpdate(int index) throws NoConnectionException, StardogException
 	{
+		if(!stardogWriter.isConnected()) throw new NoConnectionException("Stardog not connected!");
 		Graph gStage = doAuto();
 		gStage.addAll(insertProgress(index));
-		System.out.println("Writing Stage " + index + " to Stardog");
-		s.writeGraph(gStage, true);
+		logger.debug("Writing Stage {} to Triple store", index);
+		stardogWriter.writeGraph(gStage, true);
 		return true;
 	}
 	
+	/**
+	 * Calculate progress through the simulation, and add to triplestore!
+	 * @param index
+	 * @return
+	 */
 	private ArrayList<org.openrdf.model.Statement> insertProgress(int index) {
+		logger.trace("Calculating Progress at index {})", index);
 		ArrayList<org.openrdf.model.Statement> retval = new ArrayList<org.openrdf.model.Statement>();
 		retval.add(new ContextStatementImpl(C.SERURI, C.PROGRESSURI, new LiteralImpl(Integer.toString(index), C.INTDTYPE), C.GRAPHS.DYNAMIC));
 		retval.add(new ContextStatementImpl(C.SERURI, C.MAXURI, new LiteralImpl(Integer.toString(maxBatch), C.INTDTYPE), C.GRAPHS.DYNAMIC));
 		return retval;
 	}
 	
-	public void doNextUpdate() throws NoConnectionException, SQLException, StardogException, BadDBException
+	public void doNextUpdate() throws NoConnectionException, StardogException, BadDBException
 	{
+		logger.trace("Triggering Update {}", currentBatch);
 		doUpdate(currentBatch);
 		//try and do the next update
 		if(++currentBatch>maxBatch)
@@ -193,18 +159,5 @@ public class JenaTrainUpdater {
 //		}
 //		return stmt;
 //	}
-	
-	public boolean close()
-	{
-		if(!connected) return false;
-		try {
-			if(!sqlConn.isClosed())
-				sqlConn.close();
-				return true;
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return false;
-	}
+
 }
