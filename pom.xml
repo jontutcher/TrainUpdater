@@ -34,18 +34,39 @@
         <plugin>
           <artifactId>maven-assembly-plugin</artifactId>
           <configuration>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
-          <archive>
-          	<manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
-            <manifest>
-              <mainClass>uk.co.jtutcher.trainupdater.TrainUpdaterMain</mainClass>
-              <addClasspath>true</addClasspath>
-            </manifest>
-          </archive>
+	          <descriptorRefs>
+	            <descriptorRef>jar-with-dependencies</descriptorRef>
+	          </descriptorRefs>
+	          <archive>
+	            <manifest>
+	              <mainClass>uk.co.jtutcher.trainupdater.TrainUpdaterMain</mainClass>
+	              <addClasspath>true</addClasspath>
+	            </manifest>
+	          </archive>
           </configuration>
+          <executions>
+	          <execution>
+	            <id>make-assembly</id> <!-- this is used for inheritance merges -->
+	            <phase>package</phase> <!-- bind to the packaging phase -->
+	            <goals>
+	              <goal>single</goal>
+	            </goals>
+	          </execution>
+       		</executions>
         </plugin>
+        <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>appassembler-maven-plugin</artifactId>
+        <version>1.9</version>
+        <configuration>
+          <programs>
+            <program>
+              <mainClass>uk.co.jtutcher.trainupdater.TrainUpdaterMain</mainClass>
+              <id>app</id>
+            </program>
+          </programs>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   <dependencies>
