@@ -24,9 +24,9 @@ public class StardogWriter {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private Configuration config;
 //	private AdminConnection a;
-	private Connection c;
+	private Connection connection;
 	private boolean connected = false;
-	ValueFactoryImpl vf = ValueFactoryImpl.getInstance();
+	ValueFactoryImpl valueFactory = ValueFactoryImpl.getInstance();
 	public StardogWriter(Configuration config) {
 		this.config = config;
 	}
@@ -43,7 +43,7 @@ public class StardogWriter {
 //                .connect();
 		
 		try {
-			c = ConnectionConfiguration
+			connection = ConnectionConfiguration
 					.to(config.getString("stardog.db"))
 					.server(config.getString("stardog.url"))
 					.credentials(config.getString("stardog.user"), config.getString("stardog.pass"))
@@ -61,21 +61,22 @@ public class StardogWriter {
 	
 	public ArrayList<TrackCircuit> getCircuits() throws StardogException, NumberFormatException, QueryEvaluationException
 	{
-		ArrayList<TrackCircuit> tcs = new ArrayList<TrackCircuit>();
-		SelectQuery s = c.select("SELECT ?tc (COALESCE(?label, ?tc) as ?name) ?min ?max WHERE {?tc a is:TrackCircuit ; is:minLocation [is:mileage ?min] ; is:maxLocation [is:mileage ?max] ; u:id ?id . OPTIONAL {?tc rdfs:label ?label}} ORDER BY ASC(?id)");
-		s.limit(100);
-		TupleQueryResult res = s.execute();
-		while(res.hasNext())
+		ArrayList<TrackCircuit> trackCircuits = new ArrayList<TrackCircuit>();
+		SelectQuery trackCircuitsQuery = connection.select("SELECT ?tc (COALESCE(?label, ?tc) as ?name) ?min ?max WHERE {?tc a is:TrackCircuit ; is:minLocation [is:mileage ?min] ; is:maxLocation [is:mileage ?max] ; u:id ?id . OPTIONAL {?tc rdfs:label ?label}} ORDER BY ASC(?id)");
+		trackCircuitsQuery.limit(100);
+		TupleQueryResult trackCircuitQueryResult = trackCircuitsQuery.execute();
+		while(trackCircuitQueryResult.hasNext())
 		{
-			BindingSet b = res.next();
-			TrackCircuit tct = new TrackCircuit(vf.createURI(b.getValue("tc").stringValue()),
-					Double.parseDouble(b.getValue("min").stringValue()),
-					Double.parseDouble(b.getValue("max").stringValue()),
-					b.getValue("name").stringValue());
+			BindingSet bindings = trackCircuitQueryResult.next();
+			TrackCircuit trackCircuit = new TrackCircuit(valueFactory.createURI(bindings.getValue("tc").stringValue()),
+					Double.parseDouble(bindings.getValue("min").stringValue()),
+					Double.parseDouble(bindings.getValue("max").stringValue()),
+					bindings.getValue("name").stringValue());
 			
-			tcs.add(tct);
+			trackCircuits.add(trackCircuit);
 		}
-		return tcs;
+		if(trackCircuits.size()<1)throw new StardogException("No Track Circuits recieved from Stardog");
+		return trackCircuits;
 	}
 
 	
@@ -86,7 +87,7 @@ public class StardogWriter {
 		
 		try {
 		logger.info("Closing stardog writer");
-		c.close();
+		connection.close();
 		logger.info("Stardog writer closed");
 		} catch (StardogException e) {
 			logger.error("Stardog failed to close", e);
@@ -105,17 +106,17 @@ public class StardogWriter {
 		if(!connected) throw new NoConnectionException("Not Connected!");
 		try {
 			
-			c.begin();
+			connection.begin();
 			if(clear)
 			{
-				c.remove().context(C.GRAPHS.DYNAMIC);
-				c.remove().context(C.GRAPHS.MILES);
-				c.remove().context(C.GRAPHS.TRACK);
+				connection.remove().context(Constants.GRAPHS.DYNAMIC);
+				connection.remove().context(Constants.GRAPHS.MILES);
+				connection.remove().context(Constants.GRAPHS.TRACK);
 			}
 			//hope for a context aware graph!
-			c.add().graph(gStage);
-			logger.info("Writing graph {}", TUHelper.miniTruncate(gStage.toString()));
-			c.commit();
+			connection.add().graph(gStage);
+			logger.info("Writing graph {}", Helper.miniTruncate(gStage.toString()));
+			connection.commit();
 			logger.info("Committed graph");
 		} catch (StardogException e) {
 			logger.error("Could not write to Stardog", e);

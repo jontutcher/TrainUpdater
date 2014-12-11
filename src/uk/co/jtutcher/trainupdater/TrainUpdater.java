@@ -11,7 +11,7 @@ import org.openrdf.query.QueryEvaluationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import uk.co.jtutcher.trainupdater.Train.Dir;
+import uk.co.jtutcher.trainupdater.Train.Direction;
 import uk.co.jtutcher.trainupdater.exceptions.BadDBException;
 import uk.co.jtutcher.trainupdater.exceptions.NoConnectionException;
 
@@ -19,7 +19,7 @@ import com.complexible.common.openrdf.model.Graphs;
 import com.complexible.stardog.StardogException;
 
 
-public class JenaTrainUpdater {
+public class TrainUpdater {
 	
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	@SuppressWarnings("unused")
@@ -28,8 +28,8 @@ public class JenaTrainUpdater {
 	private boolean connected = false;
 	private StardogWriter stardogWriter;
 	public Train[] trains;
-	public ArrayList<TrackCircuit> tcs;
-	TrainSystem line;
+	public ArrayList<TrackCircuit> trackCircuits;
+	RailwaySystem simulatedLine;
 	private int currentBatch = 1;
 	//TODO: Add functionality to max batch (get the maximum batch number from sql)
 	private int maxBatch=84;
@@ -51,32 +51,33 @@ public class JenaTrainUpdater {
 	 * @throws QueryEvaluationException 
 	 * @throws NumberFormatException 
 	 */
-	public JenaTrainUpdater(StardogWriter stardogWriter, Configuration config) throws NoConnectionException, NumberFormatException, QueryEvaluationException, StardogException
+	public TrainUpdater(StardogWriter stardogWriter, Configuration config) throws NoConnectionException, NumberFormatException, QueryEvaluationException, StardogException
 	{ 
 		this.config = config;
 		if(!stardogWriter.isConnected()) throw new NoConnectionException("Stardog not connected!");
 		this.stardogWriter = stardogWriter;
-		tcs = stardogWriter.getCircuits();	//may throw exceptions if we can't get track circuits
+		trackCircuits = stardogWriter.getCircuits();	//may throw exceptions if we can't get track circuits
 		
-		trains = new Train[C.TRAINIDS.length];
-		line = new TrainSystem(tcs, config.getString("railway.name"));
-		logger.info("Initiated railway line {} with {} trains", line.getName(), trains.length);
+		trains = new Train[Constants.TRAINIDS.length];
+		simulatedLine = new RailwaySystem(trackCircuits, config.getString("railway.name"));
+		logger.info("Initiated railway line {} with {} trains", simulatedLine.getName(), trains.length);
 		Random rand = new Random();
 		int tLoc = 0;
 		boolean b = rand.nextBoolean();
 		for(int i = 0; i < trains.length; i++)
 		{
 			//make new trains
-			tLoc = rand.nextInt(tcs.size());
+			logger.info("Track circuit size is {}", trackCircuits.size());
+			tLoc = rand.nextInt(trackCircuits.size());
 			b = rand.nextBoolean();
 			
-			trains[i] = new Train("Train" + C.TRAINIDS[i], tcs.get(tLoc));
-			trains[i].code = C.TRAINIDS[i];
+			trains[i] = new Train("Train" + Constants.TRAINIDS[i], trackCircuits.get(tLoc));
+			trains[i].code = Constants.TRAINIDS[i];
 			if(b)
-				trains[i].dir = (Dir.UP);
+				trains[i].direction = (Direction.UP);
 			else
-				trains[i].dir = (Dir.DOWN);
-			line.addTrain(trains[i]);
+				trains[i].direction = (Direction.DOWN);
+			simulatedLine.addTrain(trains[i]);
 		}
 		
 		
@@ -90,16 +91,16 @@ public class JenaTrainUpdater {
 	public Graph doAuto() throws NoConnectionException
 	{
 		if(!stardogWriter.isConnected()) throw new NoConnectionException("Stardog not connected!");
-		line.moveTrains();
+		simulatedLine.moveTrains();
 		logger.trace("Moving Trains");
 		Graph gStage = Graphs.newContextGraph();
-		Iterator<Train> itr = line.getTrains().iterator();
+		Iterator<Train> itr = simulatedLine.getTrains().iterator();
 		
 		while(itr.hasNext())
 		{
 			Train t = itr.next();
 			//generate all RDF nodes concerning a particular train and its current location
-			gStage.addAll(TUHelper.createStopNodes(t.getFQName(), t.getLabel(), null, t.tc, t.getDir(), t.getFrom(), t.getTo()));
+			gStage.addAll(Helper.createStopNodes(t.getFQName(), t.getLabel(), null, t.trackCircuit, t.getDir(), t.getFrom(), t.getTo()));
 		}
 	
 		return gStage;
@@ -123,8 +124,8 @@ public class JenaTrainUpdater {
 	private ArrayList<org.openrdf.model.Statement> insertProgress(int index) {
 		logger.trace("Calculating Progress at index {})", index);
 		ArrayList<org.openrdf.model.Statement> retval = new ArrayList<org.openrdf.model.Statement>();
-		retval.add(new ContextStatementImpl(C.SERURI, C.PROGRESSURI, new LiteralImpl(Integer.toString(index), C.INTDTYPE), C.GRAPHS.DYNAMIC));
-		retval.add(new ContextStatementImpl(C.SERURI, C.MAXURI, new LiteralImpl(Integer.toString(maxBatch), C.INTDTYPE), C.GRAPHS.DYNAMIC));
+		retval.add(new ContextStatementImpl(Constants.SERURI, Constants.PROGRESSURI, new LiteralImpl(Integer.toString(index), Constants.INTDTYPE), Constants.GRAPHS.DYNAMIC));
+		retval.add(new ContextStatementImpl(Constants.SERURI, Constants.MAXURI, new LiteralImpl(Integer.toString(maxBatch), Constants.INTDTYPE), Constants.GRAPHS.DYNAMIC));
 		return retval;
 	}
 	

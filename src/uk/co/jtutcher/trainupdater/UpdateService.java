@@ -17,24 +17,24 @@ import com.google.common.util.concurrent.AbstractScheduledService;
  * @author Jon
  *
  */
-public class TrainUpdateService extends AbstractScheduledService {
+public class UpdateService extends AbstractScheduledService {
 	
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	public Configuration config;
-	private JenaTrainUpdater t;
+	private TrainUpdater trainUpdater;
 	boolean started = false;
 	
 	/**
 	 * Creates object and loads config
-	 * @param tu
+	 * @param trainUpdater
 	 * @param config
 	 */
-	public TrainUpdateService(JenaTrainUpdater tu, Configuration config)
+	public UpdateService(TrainUpdater trainUpdater, Configuration config)
 	{
 		super();
 		logger.trace("Creating new train updater service");
 		//make our train updater
-		t = tu;
+		this.trainUpdater = trainUpdater;
 		this.config = config;
 		//do whatever it does
 		
@@ -52,7 +52,7 @@ public class TrainUpdateService extends AbstractScheduledService {
 	 */
 	protected void runOneIteration(){
     	 try {
-			t.doNextUpdate();
+			trainUpdater.doNextUpdate();
 		} catch (NoConnectionException | StardogException | BadDBException e) {
 			logger.error("Problem connecting to data store whilst updating", e);
 		}

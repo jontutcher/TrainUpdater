@@ -5,10 +5,10 @@ import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 
-public class C {
+public class Constants {
 	
 	
-	public C()
+	public Constants()
 	{
 		
 	}
