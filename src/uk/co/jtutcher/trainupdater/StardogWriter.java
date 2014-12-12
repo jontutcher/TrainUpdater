@@ -19,11 +19,15 @@ import com.complexible.stardog.api.Connection;
 import com.complexible.stardog.api.ConnectionConfiguration;
 import com.complexible.stardog.api.SelectQuery;
 
+/**
+ * Object to read/write from/to stardog database, with particular methods for writing train simulator data
+ * @author Jon Tutcher
+ *
+ */
 public class StardogWriter {
 	
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private Configuration config;
-//	private AdminConnection a;
 	private Connection connection;
 	private boolean connected = false;
 	ValueFactoryImpl valueFactory = ValueFactoryImpl.getInstance();
@@ -36,12 +40,12 @@ public class StardogWriter {
 		return connected;
 	}
 	
+	/**
+	 * Open connection to Stardog db
+	 * @throws NoConnectionException
+	 */
 	public void open() throws NoConnectionException
-	{
-//		a = AdminConnectionConfiguration.toServer(C.STARDOG)
-//                .credentials("admin", "admin")
-//                .connect();
-		
+	{	
 		try {
 			connection = ConnectionConfiguration
 					.to(config.getString("stardog.db"))
@@ -53,12 +57,16 @@ public class StardogWriter {
 			logger.error("Cannot connect to Stardog", e);
 			throw new NoConnectionException("Cannot connect to Stardog");
 		}
-		
-		
-		
 		connected = true;
 	}
 	
+	/**
+	 * get all track circuits in stardog for simulation
+	 * @return ArrayList of track circuits found (in order)
+	 * @throws StardogException
+	 * @throws NumberFormatException
+	 * @throws QueryEvaluationException
+	 */
 	public ArrayList<TrackCircuit> getCircuits() throws StardogException, NumberFormatException, QueryEvaluationException
 	{
 		ArrayList<TrackCircuit> trackCircuits = new ArrayList<TrackCircuit>();
@@ -79,12 +87,13 @@ public class StardogWriter {
 		return trackCircuits;
 	}
 
-	
+	/**
+	 * Close stardog connection
+	 * @throws FailedToCloseException
+	 */
 	public void close() throws FailedToCloseException
 	{
-		
 		if(!connected) return;
-		
 		try {
 		logger.info("Closing stardog writer");
 		connection.close();
@@ -105,7 +114,6 @@ public class StardogWriter {
 	public void writeGraph(Graph gStage, boolean clear) throws NoConnectionException {
 		if(!connected) throw new NoConnectionException("Not Connected!");
 		try {
-			
 			connection.begin();
 			if(clear)
 			{
@@ -113,14 +121,12 @@ public class StardogWriter {
 				connection.remove().context(Constants.GRAPHS.MILES);
 				connection.remove().context(Constants.GRAPHS.TRACK);
 			}
-			//hope for a context aware graph!
 			connection.add().graph(gStage);
 			logger.info("Writing graph {}", Helper.miniTruncate(gStage.toString()));
 			connection.commit();
 			logger.info("Committed graph");
 		} catch (StardogException e) {
 			logger.error("Could not write to Stardog", e);
-//			throw new NoConnectionException();
 		}
 	}
 }

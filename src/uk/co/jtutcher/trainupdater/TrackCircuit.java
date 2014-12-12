@@ -1,11 +1,15 @@
-	package uk.co.jtutcher.trainupdater;
+package uk.co.jtutcher.trainupdater;
 
 import org.openrdf.model.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Stores track circuit details and methods
+ * @author Jon Tutcher
+ *
+ */
 public class TrackCircuit {
-	
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	public URI uri;
 	public String name;

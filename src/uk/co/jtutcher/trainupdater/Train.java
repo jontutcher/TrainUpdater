@@ -5,6 +5,11 @@ import org.openrdf.model.impl.URIImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Class to store train properties within simulator (location, direction, name, etc)
+ * @author Jon Tutcher
+ *
+ */
 public class Train {
 	
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -14,17 +19,17 @@ public class Train {
 	public String code;
 	public Direction direction = Direction.DOWN;
 	
+	/**
+	 * Create train based on name and current location
+	 * @param name Train name
+	 * @param tc Train track circuit
+	 */
 	public Train(String name, TrackCircuit tc)
 	{
 		logger.trace("New train: {}", name);
 		this.name = name;
 		this.trackCircuit = tc;
 	}
-	
-//	public Statement getTCStatement()
-//	{
-//		return new StatementImpl(getFQName(), new URIImpl(C.NS.IS + "tcPos"), getTC());
-//	}
 	
 	public String getLabel()
 	{
@@ -43,7 +48,6 @@ public class Train {
 	
 	public URI getTCURI()
 	{
-		//return new URIImpl(C.NS.RES + "TC" + Integer.toString(tc));
 		return trackCircuit.uri;
 	}
 	
@@ -80,5 +84,4 @@ public class Train {
 		return '[' + name + ' ' + trackCircuit.name + ']';
 	}
 	
-
 }

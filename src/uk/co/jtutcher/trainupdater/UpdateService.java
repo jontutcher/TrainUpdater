@@ -14,7 +14,7 @@ import com.google.common.util.concurrent.AbstractScheduledService;
 
 /**
  * Scheduled service that fires update methods at a preset interval, when trains need to be moved.
- * @author Jon
+ * @author Jon Tutcher
  *
  */
 public class UpdateService extends AbstractScheduledService {

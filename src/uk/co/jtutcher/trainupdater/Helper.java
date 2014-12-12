@@ -14,8 +14,7 @@ import org.openrdf.model.impl.ValueFactoryImpl;
 
 /**
  * Helper functions for the Train Simulator application
- * @author Jon
- *
+ * @author Jon Tutcher
  */
 public final class Helper {
 	
@@ -48,9 +47,9 @@ public final class Helper {
 	}
 	
 	/**
-	 * Create all the RDF nodes for a particular train 'stop' (i.e. a location it is in at a time)
-	 * @param subj
-	 * @param label
+	 * Create all the RDF nodes for one train's new position.
+	 * @param trainURI
+	 * @param trainLabel
 	 * @param time
 	 * @param trackCircuit
 	 * @param trainDirection
@@ -58,22 +57,32 @@ public final class Helper {
 	 * @param to
 	 * @return an array of Jena statements for each train
 	 */
-	public static ArrayList<Statement> createStopNodes(URI subj, String label, Time time, TrackCircuit trackCircuit, URI trainDirection, URI from, URI to)
+	public static ArrayList<Statement> createStopNodes(URI trainURI, String trainLabel, Time time, TrackCircuit trackCircuit, URI trainDirection, URI from, URI to)
 	{
 		ValueFactoryImpl valueFactory = ValueFactoryImpl.getInstance();
 		ArrayList<Statement> stopNodes = new ArrayList<Statement>();
+		//create new service node
 		URI newNode = new URIImpl(Constants.NS.RES + UUID.randomUUID().toString());
+		
+		//populate the service node
+		//rdf:type and rdfs:label
 		stopNodes.add(new ContextStatementImpl(newNode, Constants.VOCAB.TYPE, Constants.VOCAB.SERVICENODE, Constants.GRAPHS.DYNAMIC));
-		stopNodes.add(new ContextStatementImpl(newNode, Constants.VOCAB.LABEL, valueFactory.createLiteral("Service Node for " + label), Constants.GRAPHS.DYNAMIC));
+		stopNodes.add(new ContextStatementImpl(newNode, Constants.VOCAB.LABEL, valueFactory.createLiteral("Service Node for " + trainLabel), Constants.GRAPHS.DYNAMIC));
+		//positions (track circuit and mileage)
 		stopNodes.add(new ContextStatementImpl(newNode, Constants.VOCAB.TCPOS, trackCircuit.uri, Constants.GRAPHS.TRACK));
 		stopNodes.add(new ContextStatementImpl(newNode, Constants.VOCAB.MILEAGE, valueFactory.createLiteral(trackCircuit.getMid()), Constants.GRAPHS.MILES));
-		stopNodes.add(new ContextStatementImpl(subj, Constants.VOCAB.DIR, trainDirection, Constants.GRAPHS.DYNAMIC));
-//		ret.add(new ContextStatementImpl(newNode, C.VOCAB.TTORDER));
-		stopNodes.add(new ContextStatementImpl(subj, Constants.VOCAB.SERVICENODEPROP, newNode, Constants.GRAPHS.DYNAMIC));
-		stopNodes.add(new ContextStatementImpl(subj, Constants.VOCAB.TYPE, Constants.VOCAB.SERVICEINSTANCE, Constants.GRAPHS.DYNAMIC));
-		stopNodes.add(new ContextStatementImpl(subj, Constants.VOCAB.LABEL, valueFactory.createLiteral(label), Constants.GRAPHS.DYNAMIC));
-		stopNodes.add(new ContextStatementImpl(subj, Constants.VOCAB.ORIGIN, from, Constants.GRAPHS.DYNAMIC));
-		stopNodes.add(new ContextStatementImpl(subj, Constants.VOCAB.DESTINATION, to, Constants.GRAPHS.DYNAMIC));
+		
+		//update the train's properties
+		//direction
+		stopNodes.add(new ContextStatementImpl(trainURI, Constants.VOCAB.DIR, trainDirection, Constants.GRAPHS.DYNAMIC));
+		//new service node (the link between the train and its location
+		stopNodes.add(new ContextStatementImpl(trainURI, Constants.VOCAB.SERVICENODEPROP, newNode, Constants.GRAPHS.DYNAMIC));
+		//type and label
+		stopNodes.add(new ContextStatementImpl(trainURI, Constants.VOCAB.TYPE, Constants.VOCAB.SERVICEINSTANCE, Constants.GRAPHS.DYNAMIC));
+		stopNodes.add(new ContextStatementImpl(trainURI, Constants.VOCAB.LABEL, valueFactory.createLiteral(trainLabel), Constants.GRAPHS.DYNAMIC));
+		//origin and destination
+		stopNodes.add(new ContextStatementImpl(trainURI, Constants.VOCAB.ORIGIN, from, Constants.GRAPHS.DYNAMIC));
+		stopNodes.add(new ContextStatementImpl(trainURI, Constants.VOCAB.DESTINATION, to, Constants.GRAPHS.DYNAMIC));
 		return stopNodes;
 	}
 

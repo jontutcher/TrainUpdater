@@ -84,14 +84,14 @@ public class TrainUpdater {
 	}
 	
 	/**
-	 * 
+	 * Automatic train movement routine - changes the position of all trains down a line
 	 * @return Graph
 	 * @throws NoConnectionException
 	 */
 	public Graph doAuto() throws NoConnectionException
 	{
 		if(!stardogWriter.isConnected()) throw new NoConnectionException("Stardog not connected!");
-		simulatedLine.moveTrains();
+		simulatedLine.moveTrains();		//move trains on railway line by whatever means
 		logger.trace("Moving Trains");
 		Graph gStage = Graphs.newContextGraph();
 		Iterator<Train> itr = simulatedLine.getTrains().iterator();
@@ -137,28 +137,5 @@ public class TrainUpdater {
 		if(++currentBatch>maxBatch)
 			currentBatch=0;
 	}
-	
-//	private org.openrdf.model.Statement textStatement(String subject,
-//			String predicate, String object, String graph) 
-//	{
-//		//bodge to replace an unknown graph with our known one
-//		if(graph.isEmpty())graph=C.GRAPH.toString();
-//		
-//		if(subject.isEmpty()||predicate.isEmpty()||object.isEmpty()||graph.isEmpty())
-//			throw new IllegalArgumentException("Blank values in database row");
-//		//check if subject and predicate are valid URIs
-//		if(!TUHelper.IsValidIRI(subject)||!TUHelper.IsValidIRI(predicate)||!TUHelper.IsValidIRI(graph))
-//			throw new IllegalArgumentException("Values in database row are not URIs: " + subject + " " + predicate + " " + object);
-//		
-//		org.openrdf.model.Statement stmt;
-//		//cast the object appropriately
-//		if(TUHelper.IsValidIRI(object))
-//		{
-//			stmt = new ContextStatementImpl(new URIImpl(subject), new URIImpl(predicate), new URIImpl(object), new URIImpl(graph));
-//		} else {
-//			stmt = new ContextStatementImpl(new URIImpl(subject), new URIImpl(predicate), new LiteralImpl(object), new URIImpl(graph));
-//		}
-//		return stmt;
-//	}
 
 }

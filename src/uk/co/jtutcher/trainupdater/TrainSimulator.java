@@ -1,7 +1,5 @@
 package uk.co.jtutcher.trainupdater;
 
-import java.io.IOException;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -14,6 +12,11 @@ import uk.co.jtutcher.trainupdater.exceptions.NoConnectionException;
 
 import com.complexible.stardog.StardogException;
 
+/**
+ * Starter class for FuTRO Train Simulator
+ * @author Jon Tutcher
+ *
+ */
 public class TrainSimulator {
 	private static final Logger logger = LoggerFactory.getLogger(TrainSimulator.class);
 	private StardogWriter stardogWriter; 
@@ -22,6 +25,10 @@ public class TrainSimulator {
 	private static boolean stop = false;
 	
 	//if we're called with 'start', then call start function, otherwise call stop.
+	/**
+	 * Main function for starting Train Simulator. 
+	 * @param args "start" for service start, "stop" for service stop.
+	 */
 	public static void main(String[] args) {
 		if(args.length<1)
 			logger.info("No service parameters found; starting anyway");
@@ -33,20 +40,26 @@ public class TrainSimulator {
         }
 	}
 
+	/**
+	 * Empty constructor
+	 */
 	public TrainSimulator()
 	{
-	
 	}
 	
 	//run and loop until stop
+	/**
+	 * Static service start method. Instantiates a train simulator, and runs it. 
+	 */
 	public static void start()
 	{
 		TrainSimulator me = new TrainSimulator();
-		me.run(); //run app
-		
+		System.exit(me.run());
 	}
 	
-	//
+	/**
+	 * Static service stop method. Sets boolean to true and exits (service stops in its own time)
+	 */
 	public static void stop()
 	{
 		logger.info("Stopping...");
@@ -104,13 +117,12 @@ public class TrainSimulator {
 		
 		//stop has been received
 		updateService.stopAsync();
+		
 		try {
 			stardogWriter.close();
 		} catch (FailedToCloseException e) {
 			logger.error("Could not close triple store", e);
-			return 3;
 		}
-		System.exit(0);
 		return 0;
 	}
 }
